@@ -2,64 +2,52 @@ import React, { useContext, useEffect } from 'react'
 import { assets } from '../../assets/assets'
 import { AdminContext } from '../../context/AdminContext'
 import { AppContext } from '../../context/AppContext'
+import MetricCard from '../../components/MetricCard'
 
 const Dashboard = () => {
-
   const { aToken, getDashData, cancelAppointment, dashData } = useContext(AdminContext)
   const { slotDateFormat } = useContext(AppContext)
 
   useEffect(() => {
-    if (aToken) {
-      getDashData()
-    }
+    if (aToken) getDashData()
   }, [aToken])
 
-  return dashData && (
-    <div className='m-5'>
+  if (!dashData) {
+    return <div className='rounded-[8px] border border-slate-200 bg-white p-8 text-center text-slate-500'>Loading dashboard...</div>
+  }
 
-      <div className='flex flex-wrap gap-3'>
-        <div className='flex items-center gap-2 bg-white p-4 min-w-52 rounded border-2 border-gray-100 cursor-pointer hover:scale-105 transition-all'>
-          <img className='w-14' src={assets.doctor_icon} alt="" />
-          <div>
-            <p className='text-xl font-semibold text-gray-600'>{dashData.doctors}</p>
-            <p className='text-gray-400'>Doctors</p>
-          </div>
-        </div>
-        <div className='flex items-center gap-2 bg-white p-4 min-w-52 rounded border-2 border-gray-100 cursor-pointer hover:scale-105 transition-all'>
-          <img className='w-14' src={assets.appointments_icon} alt="" />
-          <div>
-            <p className='text-xl font-semibold text-gray-600'>{dashData.appointments}</p>
-            <p className='text-gray-400'>Appointments</p>
-          </div>
-        </div>
-        <div className='flex items-center gap-2 bg-white p-4 min-w-52 rounded border-2 border-gray-100 cursor-pointer hover:scale-105 transition-all'>
-          <img className='w-14' src={assets.patients_icon} alt="" />
-          <div>
-            <p className='text-xl font-semibold text-gray-600'>{dashData.patients}</p>
-            <p className='text-gray-400'>Patients</p></div>
-        </div>
+  return (
+    <div className='space-y-6'>
+      <div>
+        <p className='text-sm font-semibold uppercase tracking-[0.18em] text-primary'>Admin overview</p>
+        <h1 className='mt-2 text-3xl font-semibold text-slate-950'>Dashboard</h1>
       </div>
 
-      <div className='bg-white'>
-        <div className='flex items-center gap-2.5 px-4 py-4 mt-10 rounded-t border'>
-          <img src={assets.list_icon} alt="" />
-          <p className='font-semibold'>Latest Bookings</p>
-        </div>
+      <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3'>
+        <MetricCard icon={assets.doctor_icon} label='Doctors' value={dashData.doctors} />
+        <MetricCard icon={assets.appointments_icon} label='Appointments' value={dashData.appointments} />
+        <MetricCard icon={assets.patients_icon} label='Patients' value={dashData.patients} />
+      </div>
 
-        <div className='pt-4 border border-t-0'>
-          {dashData.latestAppointments.slice(0, 5).map((item, index) => (
-            <div className='flex items-center px-6 py-3 gap-3 hover:bg-gray-100' key={index}>
-              <img className='rounded-full w-10' src={item.docData.image} alt="" />
-              <div className='flex-1 text-sm'>
-                <p className='text-gray-800 font-medium'>{item.docData.name}</p>
-                <p className='text-gray-600 '>Booking on {slotDateFormat(item.slotDate)}</p>
+      <section className='overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-sm'>
+        <div className='flex items-center gap-3 border-b border-slate-200 px-5 py-4'>
+          <img className='h-5 w-5' src={assets.list_icon} alt="" />
+          <p className='font-semibold text-slate-950'>Latest bookings</p>
+        </div>
+        <div className='divide-y divide-slate-100'>
+          {!dashData.latestAppointments?.length && <p className='p-6 text-sm text-slate-500'>No bookings yet.</p>}
+          {dashData.latestAppointments?.slice(0, 5).map((item) => (
+            <div className='flex items-start gap-3 px-4 py-4 hover:bg-teal-50/40 sm:items-center sm:px-5' key={item._id}>
+              <img className='h-11 w-11 rounded-full object-cover' src={item.docData.image} alt="" />
+              <div className='min-w-0 flex-1 text-sm'>
+                <p className='truncate font-semibold text-slate-950'>{item.docData.name}</p>
+                <p className='break-words text-slate-500'>Booking on {slotDateFormat(item.slotDate)}</p>
               </div>
-              {item.cancelled ? <p className='text-red-400 text-xs font-medium'>Cancelled</p> : item.isCompleted ? <p className='text-green-500 text-xs font-medium'>Completed</p> : <img onClick={() => cancelAppointment(item._id)} className='w-10 cursor-pointer' src={assets.cancel_icon} alt="" />}
+              {item.cancelled ? <p className='text-xs font-semibold text-red-500'>Cancelled</p> : item.isCompleted ? <p className='text-xs font-semibold text-green-600'>Completed</p> : <button onClick={() => cancelAppointment(item._id)}><img className='h-9 w-9' src={assets.cancel_icon} alt="Cancel" /></button>}
             </div>
           ))}
         </div>
-      </div>
-
+      </section>
     </div>
   )
 }

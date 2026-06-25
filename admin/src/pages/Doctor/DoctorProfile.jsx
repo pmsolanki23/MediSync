@@ -4,16 +4,20 @@ import { AppContext } from '../../context/AppContext'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 
-const DoctorProfile = () => {
+const fieldClass = 'rounded-md border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary'
 
+const DoctorProfile = () => {
     const { dToken, profileData, setProfileData, getProfileData, backendUrl } = useContext(DoctorContext)
-    const { currency} = useContext(AppContext)
+    const { currency } = useContext(AppContext)
     const [isEdit, setIsEdit] = useState(false)
 
     const updateProfile = async () => {
+        if (!backendUrl) {
+            toast.info('Set VITE_BACKEND_URL to update profile.')
+            return
+        }
 
         try {
-
             const updateData = {
                 address: profileData.address,
                 fees: profileData.fees,
@@ -21,7 +25,9 @@ const DoctorProfile = () => {
                 available: profileData.available
             }
 
-            const { data } = await axios.post(backendUrl + '/api/doctor/update-profile', updateData, { headers: { dToken } })
+            const { data } = await axios.post(backendUrl + '/api/doctor/update-profile', updateData, {
+                headers: { Authorization: `Bearer ${dToken}` }
+            })
 
             if (data.success) {
                 toast.success(data.message)
@@ -30,77 +36,78 @@ const DoctorProfile = () => {
             } else {
                 toast.error(data.message)
             }
-
-            setIsEdit(false)
-
         } catch (error) {
             toast.error(error.message)
             console.log(error)
         }
-
     }
 
     useEffect(() => {
-        if (dToken) {
-            getProfileData()
-        }
+        if (dToken) getProfileData()
     }, [dToken])
 
-    return profileData && (
-        <div>
-            <div className='flex flex-col gap-4 m-5'>
-                <div>
-                    <img className='bg-primary/80 w-full sm:max-w-64 rounded-lg' src={profileData.image} alt="" />
-                </div>
+    if (!profileData) {
+        return <div className='rounded-[8px] border border-slate-200 bg-white p-8 text-center text-slate-500'>Loading profile...</div>
+    }
 
-                <div className='flex-1 border border-stone-100 rounded-lg p-8 py-7 bg-white'>
-
-                    {/* ----- Doc Info : name, degree, experience ----- */}
-
-                    <p className='flex items-center gap-2 text-3xl font-medium text-gray-700'>{profileData.name}</p>
-                    <div className='flex items-center gap-2 mt-1 text-gray-600'>
-                        <p>{profileData.degree} - {profileData.speciality}</p>
-                        <button className='py-0.5 px-2 border text-xs rounded-full'>{profileData.experience}</button>
-                    </div>
-
-                    {/* ----- Doc About ----- */}
-                    <div>
-                        <p className='flex items-center gap-1 text-sm font-medium text-[#262626] mt-3'>About :</p>
-                        <p className='text-sm text-gray-600 max-w-[700px] mt-1'>
-                            {
-                                isEdit
-                                    ? <textarea onChange={(e) => setProfileData(prev => ({ ...prev, about: e.target.value }))} type='text' className='w-full outline-primary p-2' rows={8} value={profileData.about} />
-                                    : profileData.about
-                            }
-                        </p>
-                    </div>
-
-                    <p className='text-gray-600 font-medium mt-4'>
-                        Appointment fee: <span className='text-gray-800'>{currency} {isEdit ? <input type='number' onChange={(e) => setProfileData(prev => ({ ...prev, fees: e.target.value }))} value={profileData.fees} /> : profileData.fees}</span>
-                    </p>
-
-                    <div className='flex gap-2 py-2'>
-                        <p>Address:</p>
-                        <p className='text-sm'>
-                            {isEdit ? <input type='text' onChange={(e) => setProfileData(prev => ({ ...prev, address: { ...prev.address, line1: e.target.value } }))} value={profileData.address.line1} /> : profileData.address.line1}
-                            <br />
-                            {isEdit ? <input type='text' onChange={(e) => setProfileData(prev => ({ ...prev, address: { ...prev.address, line2: e.target.value } }))} value={profileData.address.line2} /> : profileData.address.line2}
-                        </p>
-                    </div>
-
-                    <div className='flex gap-1 pt-2'>
-                        <input type="checkbox" onChange={() => isEdit && setProfileData(prev => ({ ...prev, available: !prev.available }))} checked={profileData.available} />
-                        <label htmlFor="">Available</label>
-                    </div>
-
-                    {
-                        isEdit
-                            ? <button onClick={updateProfile} className='px-4 py-1 border border-primary text-sm rounded-full mt-5 hover:bg-primary hover:text-white transition-all'>Save</button>
-                            : <button onClick={() => setIsEdit(prev => !prev)} className='px-4 py-1 border border-primary text-sm rounded-full mt-5 hover:bg-primary hover:text-white transition-all'>Edit</button>
-                    }
-
-                </div>
+    return (
+        <div className='space-y-5'>
+            <div>
+                <p className='text-sm font-semibold uppercase tracking-[0.18em] text-primary'>Doctor profile</p>
+                <h1 className='mt-2 text-3xl font-semibold text-slate-950'>{profileData.name}</h1>
             </div>
+
+            <section className='grid max-w-5xl gap-6 rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:grid-cols-[280px_1fr]'>
+                <img className='h-72 w-full rounded-[8px] bg-teal-50 object-cover object-top sm:h-80' src={profileData.image} alt={profileData.name} />
+
+                <div className='space-y-6'>
+                    <div>
+                        <p className='break-words text-2xl font-semibold text-slate-950'>{profileData.name}</p>
+                        <p className='mt-1 text-sm text-slate-500'>{profileData.degree} - {profileData.speciality}</p>
+                        <span className='mt-3 inline-flex rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-primary'>{profileData.experience}</span>
+                    </div>
+
+                    <div>
+                        <p className='mb-2 text-sm font-semibold text-slate-950'>About</p>
+                        {isEdit
+                            ? <textarea onChange={(e) => setProfileData(prev => ({ ...prev, about: e.target.value }))} className={`${fieldClass} w-full`} rows={7} value={profileData.about} />
+                            : <p className='max-w-3xl text-sm leading-7 text-slate-500'>{profileData.about}</p>}
+                    </div>
+
+                    <div className='grid gap-4 md:grid-cols-2'>
+                        <div className='rounded-[8px] bg-[#f7fbfa] p-4'>
+                            <p className='text-xs uppercase text-slate-500'>Appointment fee</p>
+                            <div className='mt-2 font-semibold text-slate-950'>
+                                {currency} {isEdit ? <input type='number' className={`${fieldClass} w-32 bg-white`} onChange={(e) => setProfileData(prev => ({ ...prev, fees: e.target.value }))} value={profileData.fees} /> : profileData.fees}
+                            </div>
+                        </div>
+
+                        <div className='rounded-[8px] bg-[#f7fbfa] p-4'>
+                            <p className='text-xs uppercase text-slate-500'>Availability</p>
+                            <label className='mt-3 flex items-center gap-2 text-sm text-slate-700'>
+                                <input type="checkbox" className='h-4 w-4 accent-primary' onChange={() => isEdit && setProfileData(prev => ({ ...prev, available: !prev.available }))} checked={profileData.available} />
+                                Available for appointments
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p className='mb-2 text-sm font-semibold text-slate-950'>Address</p>
+                        {isEdit ? (
+                            <div className='grid gap-3'>
+                                <input type='text' className={fieldClass} onChange={(e) => setProfileData(prev => ({ ...prev, address: { ...prev.address, line1: e.target.value } }))} value={profileData.address.line1} />
+                                <input type='text' className={fieldClass} onChange={(e) => setProfileData(prev => ({ ...prev, address: { ...prev.address, line2: e.target.value } }))} value={profileData.address.line2} />
+                            </div>
+                        ) : (
+                            <p className='text-sm leading-6 text-slate-500'>{profileData.address.line1}<br />{profileData.address.line2}</p>
+                        )}
+                    </div>
+
+                    {isEdit
+                        ? <button onClick={updateProfile} className='w-full rounded-full bg-primary px-7 py-3 text-sm font-semibold text-white transition hover:bg-slate-950 sm:w-auto'>Save profile</button>
+                        : <button onClick={() => setIsEdit(true)} className='w-full rounded-full border border-primary px-7 py-3 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white sm:w-auto'>Edit profile</button>}
+                </div>
+            </section>
         </div>
     )
 }

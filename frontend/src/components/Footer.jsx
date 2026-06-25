@@ -3,46 +3,35 @@ import { assets } from '../assets/assets';
 
 const Footer = () => {
   return (
-    <div className="px-6 md:px-10">
-      <div className="grid md:grid-cols-[3fr_1fr_1fr] gap-12 my-10 mt-24 text-sm items-start">
-        {/* Left Section */}
-        <div className="flex items-start gap-4">
-  <img className="w-28 mt-1" src={assets.logo} alt="MediSync Logo" />
-  <p className="text-gray-600 leading-6 md:max-w-[75%]">
-    <strong>MediSync – Effortless Healthcare Scheduling
-
-</strong> <br />Patients can instantly book appointments with trusted doctors—from routine check-ups to specialist care—in just a few clicks. Our smart reminders keep appointments on track, while real-time updates ensure seamless coordination. Designed for modern healthcare, we save time for both patients and providers.
-  </p>
-</div>
-
-
-        {/* Middle Section */}
+    <footer className="mt-16 sm:mt-20 lg:mt-24 border-t border-slate-200 py-6 sm:py-8 lg:py-10 px-3 sm:px-4 lg:px-0">
+      <div className="grid gap-6 sm:gap-8 lg:gap-10 text-xs sm:text-sm lg:grid-cols-[2fr_1fr_1fr]">
+        <div className="space-y-3 sm:space-y-4">
+          <img className="h-10 sm:h-12 w-28 sm:w-36 object-contain object-left" src={assets.logo} alt="MediSync Logo" />
+          <p className="max-w-xl leading-5 sm:leading-6 text-slate-500 text-xs sm:text-sm">
+            MediSync brings doctor discovery, appointment booking, profile management, and payment-ready appointment tracking into one clean healthcare experience.
+          </p>
+        </div>
         <div>
-          <p className="text-lg font-semibold mb-4">COMPANY</p>
-          <ul className="flex flex-col gap-2 text-gray-600">
-            <li>Home</li>
-            <li>About Us</li>
-            <li>Contact Us</li>
-            <li>Privacy Policy</li>
+          <p className="mb-2 sm:mb-4 text-sm sm:text-base font-semibold text-slate-950">Company</p>
+          <ul className="space-y-1 sm:space-y-2 text-slate-500 text-xs sm:text-sm">
+            <li className="cursor-pointer hover:text-primary transition">Home</li>
+            <li className="cursor-pointer hover:text-primary transition">About Us</li>
+            <li className="cursor-pointer hover:text-primary transition">Contact Us</li>
+            <li className="cursor-pointer hover:text-primary transition">Privacy Policy</li>
           </ul>
         </div>
-
-        {/* Right Section */}
         <div>
-          <p className="text-lg font-semibold mb-4">GET IN TOUCH</p>
-          <ul className="flex flex-col gap-2 text-gray-600">
+          <p className="mb-2 sm:mb-4 text-sm sm:text-base font-semibold text-slate-950">Get in touch</p>
+          <ul className="space-y-1 sm:space-y-2 text-slate-500 text-xs sm:text-sm">
             <li>+91-90000-90000</li>
             <li>customersupport@MediSync.in</li>
           </ul>
         </div>
       </div>
-
-      {/* Bottom Footer */}
-      <hr className="border-gray-300" />
-      <p className="py-4 text-sm text-center text-gray-600">
-        © 2026 MediSync.in — All Rights Reserved.
+      <p className="mt-6 sm:mt-8 lg:mt-10 border-t border-slate-200 pt-3 sm:pt-5 text-center text-xs sm:text-sm text-slate-500">
+        Copyright 2026 MediSync.in. All Rights Reserved.
       </p>
-    </div>
+    </footer>
   );
 };
 

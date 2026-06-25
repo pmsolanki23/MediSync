@@ -5,6 +5,16 @@
 
 *{
     font-family: Outfit;
+    letter-spacing: 0;
+    box-sizing: border-box;
+}
+html{
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+body{
+    background: #f7fbfa;
+    overflow-x: hidden;
 }
 
 ::-webkit-scrollbar{

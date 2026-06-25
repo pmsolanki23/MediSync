@@ -1,0 +1,27 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradAppt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#0f766e"/>
+      <stop offset="100%" stopColor="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="#f0f9f8"/>
+  <rect x="50" y="40" width="300" height="220" rx="20" fill="none" stroke="url(#gradAppt)" stroke-width="3" opacity="0.2"/>
+  <g fill="url(#gradAppt)" opacity="0.4">
+    <rect x="60" y="60" width="30" height="30" rx="5"/>
+    <rect x="100" y="60" width="30" height="30" rx="5"/>
+    <rect x="140" y="60" width="30" height="30" rx="5"/>
+    <rect x="180" y="60" width="30" height="30" rx="5"/>
+    <rect x="220" y="60" width="30" height="30" rx="5"/>
+    <rect x="60" y="110" width="30" height="30" rx="5"/>
+    <rect x="100" y="110" width="30" height="30" rx="5"/>
+    <rect x="140" y="110" width="30" height="30" rx="5" fill="url(#gradAppt)" opacity="1"/>
+    <rect x="180" y="110" width="30" height="30" rx="5"/>
+    <rect x="220" y="110" width="30" height="30" rx="5"/>
+  </g>
+  <circle cx="155" cy="155" r="25" fill="none" stroke="#fbbf24" stroke-width="3"/>
+  <text x="155" y="165" text-anchor="middle" fill="#0f766e" font-size="24" font-weight="bold">15</text>
+  <circle cx="200" cy="220" r="20" fill="none" stroke="url(#gradAppt)" stroke-width="2"/>
+  <line x1="200" y1="205" x2="200" y2="215" stroke="url(#gradAppt)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="200" y1="220" x2="210" y2="220" stroke="url(#gradAppt)" stroke-width="2" stroke-linecap="round"/>
+</svg>

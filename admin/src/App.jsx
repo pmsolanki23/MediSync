@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext } from 'react'
 import { DoctorContext } from './context/DoctorContext'
 import { AdminContext } from './context/AdminContext'
 import { Route, Routes, Navigate, useLocation } from 'react-router-dom'
@@ -16,65 +16,64 @@ import DoctorAppointments from './pages/Doctor/DoctorAppointments'
 import DoctorDashboard from './pages/Doctor/DoctorDashboard'
 import DoctorProfile from './pages/Doctor/DoctorProfile'
 
+const AppShell = ({ children }) => (
+  <div className='min-h-screen bg-[#f7fbfa] text-slate-900'>
+    <ToastContainer />
+    <Navbar />
+    <div className='flex items-start'>
+      <Sidebar />
+      <main className='min-h-[calc(100vh-73px)] w-full min-w-0 overflow-x-hidden p-4 pb-24 sm:p-6 sm:pb-24 md:pb-6'>
+        {children}
+      </main>
+    </div>
+  </div>
+)
+
 const App = () => {
   const { dToken } = useContext(DoctorContext)
   const { aToken } = useContext(AdminContext)
   const location = useLocation()
 
-  // Redirect "/" to the proper dashboard
   if (location.pathname === '/') {
     if (aToken) return <Navigate to="/admin-dashboard" replace />
     if (dToken) return <Navigate to="/doctor-dashboard" replace />
   }
 
-  // Admin layout and routes
   if (aToken) {
     return (
-      <div className='bg-[#F8F9FD]'>
-        <ToastContainer />
-        <Navbar />
-        <div className='flex items-start'>
-          <Sidebar />
-          <Routes>
-            <Route path="/admin-dashboard" element={<Dashboard />} />
-            <Route path="/all-appointments" element={<AllAppointments />} />
-            <Route path="/add-doctor" element={<AddDoctor />} />
-            <Route path="/doctor-list" element={<DoctorsList />} />
-            <Route path="*" element={<Navigate to="/admin-dashboard" />} />
-          </Routes>
-        </div>
-      </div>
+      <AppShell>
+        <Routes>
+          <Route path="/admin-dashboard" element={<Dashboard />} />
+          <Route path="/all-appointments" element={<AllAppointments />} />
+          <Route path="/add-doctor" element={<AddDoctor />} />
+          <Route path="/doctor-list" element={<DoctorsList />} />
+          <Route path="*" element={<Navigate to="/admin-dashboard" />} />
+        </Routes>
+      </AppShell>
     )
   }
 
-  // Doctor layout and routes
   if (dToken) {
     return (
-      <div className='bg-[#F8F9FD]'>
-        <ToastContainer />
-        <Navbar />
-        <div className='flex items-start'>
-          <Sidebar />
-          <Routes>
-            <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-            <Route path="/doctor-appointments" element={<DoctorAppointments />} />
-            <Route path="/doctor-profile" element={<DoctorProfile />} />
-            <Route path="*" element={<Navigate to="/doctor-dashboard" />} />
-          </Routes>
-        </div>
-      </div>
+      <AppShell>
+        <Routes>
+          <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+          <Route path="/doctor-appointments" element={<DoctorAppointments />} />
+          <Route path="/doctor-profile" element={<DoctorProfile />} />
+          <Route path="*" element={<Navigate to="/doctor-dashboard" />} />
+        </Routes>
+      </AppShell>
     )
   }
 
-  // No one is logged in
   return (
-    <>
+    <div className='min-h-screen bg-[#f7fbfa]'>
       <ToastContainer />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </>
+    </div>
   )
 }
 

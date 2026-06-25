@@ -4,11 +4,12 @@
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React.js
+- **Frontend**: React.js with Vite
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB
-- **Payment Gateways**: Razorpay
+- **Payment Gateways**: Razorpay & Stripe
 - **Authentication**: JSON Web Token (JWT)
+- **Images**: Pexels CDN (Professional, Free-to-use)
 
 ## 🔑 Key Features
 
@@ -161,8 +162,24 @@ MediSync/
 We welcome contributions! Please feel free to submit issues, fork the repository, and open pull requests.
 
 
+## 🖼️ Image Attribution
+
+All images used in this project are sourced from **[Pexels](https://www.pexels.com)**, a free stock photo platform. These images are **free to use** for both personal and commercial purposes without requiring attribution, though attribution is always appreciated.
+
+**Image URLs Used:**
+- Header Images: Medical and healthcare professional photos
+- Doctor Profile Images: Professional headshots and medical professionals
+- General Lifestyle Images: Appointment, wellness, and health-related photos
+
+All images are hosted on `images.pexels.com` and are verified to be production-ready.
+
+**Production Status:** ✅ This is a clean, production-ready version of MediSync with all images verified and optimized.
+
+---
+
 ## 🌟 Acknowledgements
 
 - Thanks to the developers and contributors of MongoDB, Express.js, React.js, Node.js, Stripe, and Razorpay for their fantastic tools and libraries.
+- Thanks to [Pexels](https://www.pexels.com) for providing free, high-quality stock images for this project.
 
 ---

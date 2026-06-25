@@ -13,6 +13,12 @@ const userSchema = new mongoose.Schema({
   gender: { type: String, default: "Not Selected" },
   dob: { type: String, default: "Not Selected" },
   password: { type: String, required: true },
+  is2FAEnabled: { type: Boolean, default: false },
+  darkMode: { type: Boolean, default: false },
+  walletBalance: { type: Number, default: 0 },
+  referralCode: { type: String, default: "" },
+  referredBy: { type: String, default: "" },
+  createdAt: { type: Number, required: true },
 });
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);

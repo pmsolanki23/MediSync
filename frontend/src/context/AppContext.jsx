@@ -1,32 +1,44 @@
-import { createContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from 'axios'
-
-export const AppContext = createContext()
+import { doctors as seededDoctors } from '../assets/assets'
+import { AppContext } from './AppContextObject'
 
 const AppContextProvider = (props) => {
-    const currencySymbol = '₹'
+    const currencySymbol = 'Rs.'
     const backendUrl = import.meta.env.VITE_BACKEND_URL
 
-    const [doctors, setDoctors] = useState([])
+    const [doctors, setDoctors] = useState(seededDoctors)
+    const [loadingDoctors, setLoadingDoctors] = useState(false)
     const [token, setToken] = useState(localStorage.getItem('token') || '')
     const [userData, setUserData] = useState(false)
 
-    const getDoctorsData = async () => {
+    const getDoctorsData = useCallback(async () => {
+        if (!backendUrl) {
+            setDoctors(seededDoctors)
+            return
+        }
+
         try {
+            setLoadingDoctors(true)
             const { data } = await axios.get(backendUrl + '/api/doctor/list')
             if (data.success) {
-                setDoctors(data.doctors)
+                setDoctors(data.doctors.length ? data.doctors : seededDoctors)
             } else {
+                setDoctors(seededDoctors)
                 toast.error(data.message)
             }
         } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            setDoctors(seededDoctors)
+            toast.info('Showing demo doctors until the server is available.')
+        } finally {
+            setLoadingDoctors(false)
         }
-    }
+    }, [backendUrl])
 
-    const loadUserProfileData = async () => {
+    const loadUserProfileData = useCallback(async () => {
+        if (!backendUrl || !token) return
+
         try {
             const { data } = await axios.get(backendUrl + '/api/user/get-profile', {
                 headers: { token }
@@ -44,23 +56,22 @@ const AppContextProvider = (props) => {
                 toast.error(data.message)
             }
         } catch (error) {
-            console.log(error)
             toast.error(error.message)
         }
-    }
+    }, [backendUrl, token])
 
     useEffect(() => {
         getDoctorsData()
-    }, [])
+    }, [getDoctorsData])
 
     useEffect(() => {
         if (token) {
             loadUserProfileData()
         }
-    }, [token])
+    }, [token, loadUserProfileData])
 
     const value = {
-        doctors, getDoctorsData,
+        doctors, getDoctorsData, loadingDoctors,
         currencySymbol,
         backendUrl,
         token, setToken,
