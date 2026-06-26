@@ -1,180 +1,289 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import axios from 'axios'
-import { Download, Calendar, FileText } from 'lucide-react'
+import { AppContext } from '../context/AppContextObject'
+import { Download, FileText, Pill, Calendar, AlertCircle } from 'lucide-react'
+import { toast } from 'react-toastify'
 
-const PrescriptionComponent = ({ userId, isDarkMode }) => {
-  const [prescriptions, setprescriptions] = useState([])
+const PrescriptionComponent = ({ isDarkMode }) => {
+  const { backendUrl, token, currencySymbol, userData } = useContext(AppContext)
+  const [prescriptions, setPrescriptions] = useState([])
   const [loading, setLoading] = useState(false)
-  const [selectedStatus, setSelectedStatus] = useState('active')
-
-  const backendURL = import.meta.env.VITE_BACKEND_URL
+  const [selectedPrescription, setSelectedPrescription] = useState(null)
 
   useEffect(() => {
-    if (userId) {
+    if (userData?._id) {
       fetchPrescriptions()
     }
-  }, [userId, selectedStatus])
+  }, [userData])
 
   const fetchPrescriptions = async () => {
     setLoading(true)
     try {
       const { data } = await axios.post(
-        `${backendURL}/api/user/get-prescriptions`,
-        { userId, status: selectedStatus },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        `${backendUrl}/api/user/get-prescriptions`,
+        { userId: userData._id },
+        { headers: { token } }
       )
       if (data.success) {
-        setprescriptions(data.prescriptions)
+        setPrescriptions(data.prescriptions)
       }
     } catch (error) {
+      toast.error('Failed to load prescriptions')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDownloadPrescription = async (prescriptionId) => {
+  const handleDownloadPrescription = (prescription) => {
     try {
-      const { data } = await axios.post(
-        `${backendURL}/api/user/get-prescription`,
-        { userId, prescriptionId },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      )
+      const printContent = `
+        <html>
+          <head>
+            <title>Prescription</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                margin: 0; 
+                padding: 20px;
+                background: #f5f5f5;
+              }
+              .container {
+                background: white;
+                max-width: 800px;
+                margin: auto;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              }
+              h1 {
+                color: #0f766e;
+                text-align: center;
+                margin-bottom: 30px;
+              }
+              h2 {
+                color: #0f766e;
+                border-bottom: 2px solid #0f766e;
+                padding-bottom: 10px;
+                margin-top: 20px;
+              }
+              .info-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 20px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid #eee;
+              }
+              .info-item {
+                margin-bottom: 10px;
+              }
+              .label {
+                font-weight: bold;
+                color: #666;
+                font-size: 12px;
+                text-transform: uppercase;
+              }
+              .value {
+                color: #333;
+                margin-top: 5px;
+                font-size: 16px;
+              }
+              .diagnosis-box {
+                background: #f0f9f8;
+                border-left: 4px solid #0f766e;
+                padding: 15px;
+                margin-bottom: 20px;
+              }
+              .medication {
+                border-left: 4px solid #0f766e;
+                padding: 15px;
+                margin-bottom: 15px;
+                background: #f9f9f9;
+              }
+              .med-name {
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 10px;
+              }
+              .med-details {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 10px;
+                font-size: 13px;
+              }
+              .med-detail {
+                margin-bottom: 5px;
+              }
+              .detail-label {
+                font-weight: bold;
+                color: #0f766e;
+                font-size: 11px;
+              }
+              .detail-value {
+                color: #333;
+              }
+              .validity {
+                background: #fff8e1;
+                border-left: 4px solid #ffc107;
+                padding: 15px;
+                margin-top: 20px;
+                color: #856404;
+              }
+              .doctor-info {
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+              }
+              .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 2px solid #eee;
+                font-size: 12px;
+                color: #666;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Medical Prescription</h1>
+              
+              <div class="info-row">
+                <div class="info-item">
+                  <div class="label">Date Issued</div>
+                  <div class="value">${new Date(prescription.date).toLocaleDateString()}</div>
+                </div>
+                <div class="info-item">
+                  <div class="label">Doctor</div>
+                  <div class="value">${prescription.doctorName}</div>
+                </div>
+              </div>
 
-      if (data.success) {
-        // In real implementation, this would generate and download a PDF
-        const prescriptionData = data.prescription
-        const printWindow = window.open('', '', 'height=600,width=800')
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Prescription</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h2 { color: #333; }
-                .medicine { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              </style>
-            </head>
-            <body>
-              <h2>Medical Prescription</h2>
-              <p><strong>Date:</strong> ${new Date(prescriptionData.date).toLocaleDateString()}</p>
-              <p><strong>Diagnosis:</strong> ${prescriptionData.diagnosis}</p>
-              <h3>Medicines</h3>
-              <table>
-                <tr>
-                  <th>Medicine Name</th>
-                  <th>Dosage</th>
-                  <th>Frequency</th>
-                  <th>Duration</th>
-                </tr>
-                ${prescriptionData.medicines.map(m => `
-                  <tr>
-                    <td>${m.name}</td>
-                    <td>${m.dosage}</td>
-                    <td>${m.frequency}</td>
-                    <td>${m.duration}</td>
-                  </tr>
-                `).join('')}
-              </table>
-              <p><strong>Notes:</strong> ${prescriptionData.notes}</p>
-            </body>
-          </html>
-        `)
-        printWindow.document.close()
-      }
+              <div class="diagnosis-box">
+                <div class="label">Diagnosis</div>
+                <div class="value">${prescription.diagnosis}</div>
+              </div>
+
+              <h2>Medications</h2>
+              ${prescription.medications.map(med => `
+                <div class="medication">
+                  <div class="med-name">${med.name}</div>
+                  <div class="med-details">
+                    <div class="med-detail">
+                      <div class="detail-label">Dosage</div>
+                      <div class="detail-value">${med.dosage}</div>
+                    </div>
+                    <div class="med-detail">
+                      <div class="detail-label">Frequency</div>
+                      <div class="detail-value">${med.frequency}</div>
+                    </div>
+                    <div class="med-detail">
+                      <div class="detail-label">Duration</div>
+                      <div class="detail-value">${med.duration}</div>
+                    </div>
+                  </div>
+                  ${med.notes ? `<div style="margin-top: 10px; color: #666;"><strong>Notes:</strong> ${med.notes}</div>` : ''}
+                </div>
+              `).join('')}
+
+              ${prescription.notes ? `
+                <div style="background: #f5f5f5; padding: 15px; margin-top: 20px; border-radius: 4px;">
+                  <div class="label">Additional Notes</div>
+                  <div class="value">${prescription.notes}</div>
+                </div>
+              ` : ''}
+
+              <div class="validity">
+                <strong>Valid until:</strong> ${new Date(prescription.expiryDate).toLocaleDateString()}
+              </div>
+
+              <div class="doctor-info">
+                <div class="info-item">
+                  <div class="label">Prescribed By</div>
+                  <div class="value">${prescription.doctorName} (${prescription.doctorSpeciality})</div>
+                </div>
+              </div>
+
+              <div class="footer">
+                <p>This prescription is valid for 90 days from the issue date.</p>
+                <p>Please consult your doctor if you have any questions.</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `
+
+      const printWindow = window.open('', '', 'height=600,width=800')
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.print()
+      toast.success('Prescription ready for print')
     } catch (error) {
+      toast.error('Failed to download prescription')
     }
   }
 
-  return (
-    <div className={`p-4 sm:p-6 lg:p-8 rounded-lg sm:rounded-2xl shadow-md ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
-      <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
-        <FileText size={24} className="sm:w-7 sm:h-7" />
-        My Prescriptions
-      </h3>
+  if (loading) {
+    return (
+      <div className='rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-8 shadow-sm'>
+        <p className='text-center py-8 text-slate-500 text-sm'>Loading prescriptions...</p>
+      </div>
+    )
+  }
 
-      {/* Status Filter */}
-      <div className="mb-6 flex flex-wrap gap-2 sm:gap-3">
-        {['active', 'expired', 'all'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setSelectedStatus(status)}
-            className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium capitalize transition ${
-              selectedStatus === status
-                ? 'bg-blue-500 text-white'
-                : isDarkMode
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-            }`}
-          >
-            {status}
-          </button>
-        ))}
+  return (
+    <div className='rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-8 shadow-sm'>
+      <div className='flex items-center gap-3 mb-6'>
+        <FileText className='w-6 h-6 sm:w-7 sm:h-7 text-primary flex-shrink-0' />
+        <h2 className='text-lg sm:text-xl lg:text-2xl font-bold text-slate-900'>My Prescriptions</h2>
       </div>
 
-      {/* Prescriptions List */}
-      {loading ? (
-        <p className="text-center py-8 text-sm sm:text-base">Loading prescriptions...</p>
-      ) : prescriptions.length > 0 ? (
-        <div className="space-y-3 sm:space-y-4">
+      {prescriptions.length === 0 ? (
+        <div className='text-center py-12'>
+          <FileText className='w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-4' />
+          <p className='text-slate-500 text-sm sm:text-base'>No prescriptions yet</p>
+        </div>
+      ) : (
+        <div className='space-y-3 sm:space-y-4'>
           {prescriptions.map((prescription) => (
             <div
               key={prescription._id}
-              className={`p-4 sm:p-5 lg:p-6 border rounded-lg sm:rounded-xl transition ${
-                isDarkMode
-                  ? 'border-gray-700 bg-gray-900 hover:border-gray-600'
-                  : 'border-gray-200 bg-gray-50 hover:border-blue-300'
-              }`}
+              className='rounded-lg sm:rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50 p-4 sm:p-5 transition hover:border-primary/30 hover:shadow-md'
             >
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-                <div className="flex-1">
-                  <p className="font-semibold text-base sm:text-lg">Diagnosis: {prescription.diagnosis}</p>
-                  <p className={`text-xs sm:text-sm flex items-center gap-1 mt-1 sm:mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <Calendar size={14} className="sm:w-4 sm:h-4" />
-                    {new Date(prescription.date).toLocaleDateString()}
+              <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3'>
+                <div className='flex-1 min-w-0'>
+                  <h3 className='font-bold text-slate-900 text-sm sm:text-base break-words'>
+                    {prescription.diagnosis}
+                  </h3>
+                  <div className='mt-3 sm:mt-4 flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm'>
+                    <div className='flex items-center gap-2 text-slate-600'>
+                      <Pill className='w-4 h-4 flex-shrink-0' />
+                      <span>{prescription.medications.length} medications</span>
+                    </div>
+                    <div className='flex items-center gap-2 text-slate-600'>
+                      <Calendar className='w-4 h-4 flex-shrink-0' />
+                      <span>{new Date(prescription.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className='text-slate-600 text-xs sm:text-sm'>
+                      Dr. {prescription.doctorName}
+                    </div>
+                  </div>
+                  <p className='text-xs text-slate-500 mt-2'>
+                    Valid until: {new Date(prescription.expiryDate).toLocaleDateString()}
                   </p>
                 </div>
-                <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                  prescription.status === 'active'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {prescription.status}
-                </span>
+
+                <button
+                  onClick={() => handleDownloadPrescription(prescription)}
+                  className='rounded-lg sm:rounded-xl bg-primary px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white transition hover:opacity-90 flex items-center justify-center gap-2 whitespace-nowrap'
+                >
+                  <Download className='w-4 h-4' />
+                  Download
+                </button>
               </div>
-
-              <div className="mb-4 sm:mb-5">
-                <h4 className="font-medium text-sm sm:text-base mb-2 sm:mb-3">Medicines:</h4>
-                <div className="space-y-1.5 sm:space-y-2 sm:ml-4">
-                  {prescription.medicines.map((med, idx) => (
-                    <p key={idx} className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                      • <strong>{med.name}</strong> - {med.dosage} ({med.frequency}) for {med.duration}
-                    </p>
-                  ))}
-                </div>
-              </div>
-
-              {prescription.notes && (
-                <p className={`text-xs sm:text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <strong>Notes:</strong> {prescription.notes}
-                </p>
-              )}
-
-              <button
-                onClick={() => handleDownloadPrescription(prescription._id)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-blue-500 text-white rounded-lg sm:rounded-xl hover:bg-blue-600 transition text-xs sm:text-sm font-medium"
-              >
-                <Download size={16} className="sm:w-4 sm:h-4" />
-                Download PDF
-              </button>
             </div>
           ))}
         </div>
-      ) : (
-        <p className={`text-center py-8 text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          No prescriptions available
-        </p>
       )}
     </div>
   )

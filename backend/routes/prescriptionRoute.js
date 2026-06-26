@@ -1,12 +1,10 @@
 import express from 'express';
-import { addPrescription, getUserPrescriptions, getPrescription } from '../controllers/prescriptionController.js';
-import authUser from '../middlewares/authUser.js';
+import { addPrescription, getDoctorPrescriptions } from '../controllers/prescriptionController.js';
 import authDoctor from '../middlewares/authDoctor.js';
 
 const prescriptionRouter = express.Router();
 
-prescriptionRouter.post('/add', authDoctor, addPrescription);
-prescriptionRouter.get('/user-prescriptions', authUser, getUserPrescriptions);
-prescriptionRouter.get('/:prescriptionId', authUser, getPrescription);
+prescriptionRouter.post('/add-prescription', authDoctor, addPrescription);
+prescriptionRouter.post('/get-doctor-prescription', authDoctor, getDoctorPrescriptions);
 
 export default prescriptionRouter;

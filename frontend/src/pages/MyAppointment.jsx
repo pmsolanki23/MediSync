@@ -542,6 +542,18 @@ const MyAppointments = () => {
                   item.payment &&
                   !item.isCompleted && (
 
+                    <button
+                      onClick={() => navigate('/messages')}
+                      className='rounded-lg sm:rounded-xl border border-purple-200 bg-purple-50 px-3 sm:px-6 py-2 sm:py-3 font-semibold text-purple-600 transition hover:bg-purple-600 hover:text-white flex items-center justify-center gap-2 text-xs sm:text-sm touch-manipulation'
+                    >
+                      💬 Message Doctor
+                    </button>
+                  )}
+
+                {!item.cancelled &&
+                  item.payment &&
+                  !item.isCompleted && (
+
                     <button className='rounded-lg sm:rounded-xl bg-green-50 px-3 sm:px-6 py-2 sm:py-3 font-semibold text-green-700 flex items-center justify-center gap-2 text-xs sm:text-sm'>
                       <CheckCircle className='w-4 h-4' />
                       Paid
