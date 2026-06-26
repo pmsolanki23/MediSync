@@ -4,7 +4,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const Invoices = () => {
-  const { backendUrl, token, currencySymbol } = useContext(AppContext)
+  const { backendUrl, token, currencySymbol, userData } = useContext(AppContext)
   const [invoices, setInvoices] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -13,7 +13,7 @@ const Invoices = () => {
   useEffect(() => {
     fetchInvoices()
     fetchStats()
-  }, [])
+  }, [token, userData])
 
   const fetchInvoices = async () => {
     setLoading(true)
@@ -45,7 +45,9 @@ const Invoices = () => {
 
   const fetchStats = async () => {
     try {
-      const userId = localStorage.getItem('userId')
+      const userId = userData?._id || localStorage.getItem('userId')
+      if (!userId) return
+
       const { data } = await axios.post(
         `${backendUrl}/api/user/invoice-stats`,
         { userId },
@@ -65,7 +67,12 @@ const Invoices = () => {
 
   const downloadInvoice = async (invoiceId) => {
     try {
-      const userId = localStorage.getItem('userId')
+      const userId = userData?._id || localStorage.getItem('userId')
+      if (!userId) {
+        toast.error('User ID not found')
+        return
+      }
+
       const { data } = await axios.post(
         `${backendUrl}/api/user/download-invoice`,
         { userId, invoiceId },
@@ -99,6 +106,7 @@ Payment Method: ${data.invoice.paymentMethod}
         toast.success('Invoice downloaded')
       }
     } catch (error) {
+      console.error('Download error:', error)
       toast.error('Failed to download invoice')
     }
   }
