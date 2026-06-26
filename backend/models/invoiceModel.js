@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 
 const invoiceSchema = new mongoose.Schema({
-  appointmentId: { type: String, required: true, unique: true },
+  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'appointment', required: true },
   userId: { type: String, required: true },
   docId: { type: String, required: true },
   amount: { type: Number, required: true },
-  paymentMethod: { type: String, enum: ['cash', 'online'], required: true },
+  paymentMethod: { type: String, enum: ['cash', 'online', 'wallet'], required: true },
   status: { type: String, enum: ['pending', 'paid', 'refunded'], default: 'pending' },
   invoiceNumber: { type: String, unique: true },
-  issueDate: { type: Number, required: true },
+  issueDate: { type: Number, default: Date.now },
   dueDate: { type: Number },
   items: [{
     description: String,

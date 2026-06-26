@@ -16,9 +16,10 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     setLoading(true)
     try {
+      const userId = localStorage.getItem('userId')
       const { data } = await axios.post(
         `${backendUrl}/api/user/get-notifications`,
-        {},
+        { userId },
         { headers: { token } }
       )
       if (data.success) {
@@ -47,9 +48,10 @@ const Notifications = () => {
 
   const markAllAsRead = async () => {
     try {
+      const userId = localStorage.getItem('userId')
       const { data } = await axios.post(
         `${backendUrl}/api/user/mark-all-read`,
-        {},
+        { userId },
         { headers: { token } }
       )
       if (data.success) {

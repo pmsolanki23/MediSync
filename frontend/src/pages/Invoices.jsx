@@ -18,9 +18,10 @@ const Invoices = () => {
   const fetchInvoices = async () => {
     setLoading(true)
     try {
+      const userId = localStorage.getItem('userId')
       const { data } = await axios.post(
         `${backendUrl}/api/user/get-invoices`,
-        {},
+        { userId },
         { headers: { token } }
       )
       if (data.success) {
@@ -35,34 +36,59 @@ const Invoices = () => {
 
   const fetchStats = async () => {
     try {
+      const userId = localStorage.getItem('userId')
       const { data } = await axios.post(
         `${backendUrl}/api/user/invoice-stats`,
-        {},
+        { userId },
         { headers: { token } }
       )
       if (data.success) {
-        setStats(data.stats)
+        setStats({
+          totalInvoices: data.stats.total,
+          totalAmount: data.stats.totalAmount,
+          outstandingAmount: data.stats.pendingAmount
+        })
       }
     } catch (error) {
+      console.error('Failed to load stats', error)
     }
   }
 
   const downloadInvoice = async (invoiceId) => {
     try {
+      const userId = localStorage.getItem('userId')
       const { data } = await axios.post(
         `${backendUrl}/api/user/download-invoice`,
-        { invoiceId },
-        { headers: { token }, responseType: 'blob' }
+        { userId, invoiceId },
+        { headers: { token } }
       )
 
-      const url = window.URL.createObjectURL(new Blob([data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `invoice-${invoiceId}.pdf`)
-      document.body.appendChild(link)
-      link.click()
-      link.parentElement.removeChild(link)
-      toast.success('Invoice downloaded')
+      if (data.success) {
+        // Create a simple text/HTML representation if PDF generation isn't available
+        const invoiceText = `
+MEDISYNC INVOICE
+================================
+Invoice #: ${data.invoice.invoiceNumber}
+Date: ${new Date(data.invoice.issueDate).toLocaleDateString()}
+Status: ${data.invoice.status}
+
+Doctor: ${data.invoice.doctorName}
+Speciality: ${data.invoice.doctorSpeciality}
+
+Amount: ${data.invoice.amount}
+Payment Method: ${data.invoice.paymentMethod}
+
+================================
+        `
+        const element = document.createElement('a')
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(invoiceText))
+        element.setAttribute('download', `invoice-${invoiceId}.txt`)
+        element.style.display = 'none'
+        document.body.appendChild(element)
+        element.click()
+        document.body.removeChild(element)
+        toast.success('Invoice downloaded')
+      }
     } catch (error) {
       toast.error('Failed to download invoice')
     }
@@ -146,11 +172,11 @@ const Invoices = () => {
                       <div className='grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 text-xs sm:text-sm text-slate-600'>
                         <div>
                           <p className='text-xs text-slate-500 font-semibold'>Doctor</p>
-                          <p className='mt-1 font-medium text-slate-900 truncate'>{invoice.doctorName}</p>
+                          <p className='mt-1 font-medium text-slate-900 truncate'>{invoice.doctorName || 'N/A'}</p>
                         </div>
                         <div>
                           <p className='text-xs text-slate-500 font-semibold'>Date</p>
-                          <p className='mt-1'>{new Date(invoice.date).toLocaleDateString()}</p>
+                          <p className='mt-1'>{new Date(invoice.issueDate).toLocaleDateString()}</p>
                         </div>
                         <div>
                           <p className='text-xs text-slate-500 font-semibold'>Amount</p>
@@ -161,7 +187,7 @@ const Invoices = () => {
                       </div>
 
                       <div className='mt-3 text-xs text-slate-500 line-clamp-1'>
-                        <p>Description: {invoice.description}</p>
+                        <p>Method: {invoice.paymentMethod}</p>
                       </div>
                     </div>
                   </div>
@@ -212,7 +238,7 @@ const Invoices = () => {
                   <div>
                     <p className='text-xs sm:text-sm text-slate-500 font-semibold'>Invoice Date</p>
                     <p className='mt-1 font-bold text-slate-900 text-sm sm:text-base'>
-                      {new Date(selectedInvoice.date).toLocaleDateString()}
+                      {new Date(selectedInvoice.issueDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
@@ -232,7 +258,7 @@ const Invoices = () => {
                   <p className='text-xs sm:text-sm font-semibold text-slate-500 mb-3'>SERVICES PROVIDED</p>
                   <div className='space-y-2'>
                     <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-slate-50 rounded-xl gap-2'>
-                      <p className='text-slate-900 text-xs sm:text-sm break-words'>{selectedInvoice.description}</p>
+                      <p className='text-slate-900 text-xs sm:text-sm break-words'>Consultation Fee</p>
                       <p className='font-bold text-slate-900 text-sm sm:text-base whitespace-nowrap'>{currencySymbol} {selectedInvoice.amount}</p>
                     </div>
                   </div>
@@ -242,7 +268,7 @@ const Invoices = () => {
                 <div className='border-t border-slate-200 pt-4 sm:pt-6'>
                   <p className='text-xs sm:text-sm font-semibold text-slate-500 mb-3'>DOCTOR DETAILS</p>
                   <div className='bg-slate-50 rounded-xl p-3 sm:p-4'>
-                    <p className='font-bold text-slate-900 text-sm sm:text-base'>{selectedInvoice.doctorName}</p>
+                    <p className='font-bold text-slate-900 text-sm sm:text-base'>{selectedInvoice.doctorName || 'N/A'}</p>
                     {selectedInvoice.doctorSpeciality && (
                       <p className='text-xs sm:text-sm text-slate-600'>{selectedInvoice.doctorSpeciality}</p>
                     )}

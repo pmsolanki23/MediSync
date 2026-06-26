@@ -1,13 +1,14 @@
 import messageModel from "../models/messageModel.js";
 import conversationModel from "../models/conversationModel.js";
+import userModel from "../models/userModel.js";
 
 const sendMessage = async (req, res) => {
   try {
-    const { userId } = req.headers;
+    const userId = req.user;
     const { recipientId, content, conversationId } = req.body;
 
     if (!recipientId || !content) {
-      return res.json({ success: false, message: "Missing Details" });
+      return res.json({ success: false, message: "Missing details" });
     }
 
     let conversation;
@@ -15,14 +16,28 @@ const sendMessage = async (req, res) => {
     if (conversationId) {
       conversation = await conversationModel.findById(conversationId);
     } else {
+      // Find or create conversation
       conversation = await conversationModel.findOne({
         participants: { $all: [userId, recipientId] }
       });
 
       if (!conversation) {
+        // Get user details
+        const sender = await userModel.findById(userId);
+        const recipient = await userModel.findById(recipientId);
+
         conversation = await conversationModel.create({
           participants: [userId, recipientId],
-          createdAt: Date.now()
+          participantNames: {
+            [userId]: sender?.name || 'User',
+            [recipientId]: recipient?.name || 'User'
+          },
+          participantImages: {
+            [userId]: sender?.image || '',
+            [recipientId]: recipient?.image || ''
+          },
+          createdAt: Date.now(),
+          updatedAt: Date.now()
         });
       }
     }
@@ -38,7 +53,8 @@ const sendMessage = async (req, res) => {
     await conversationModel.findByIdAndUpdate(conversation._id, {
       lastMessage: content,
       lastMessageTime: Date.now(),
-      lastMessageSenderId: userId
+      lastMessageSenderId: userId,
+      updatedAt: Date.now()
     });
 
     res.json({ success: true, message });
@@ -60,7 +76,7 @@ const getMessages = async (req, res) => {
 
     const messages = await messageModel
       .find({ conversationId })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 })
       .skip(skip)
       .limit(limit);
 
@@ -68,7 +84,7 @@ const getMessages = async (req, res) => {
 
     res.json({
       success: true,
-      messages: messages.reverse(),
+      messages,
       pagination: {
         page,
         limit,
@@ -84,7 +100,7 @@ const getMessages = async (req, res) => {
 
 const getConversations = async (req, res) => {
   try {
-    const { userId } = req.headers;
+    const userId = req.user;
 
     const conversations = await conversationModel
       .find({ participants: userId })
@@ -106,7 +122,6 @@ const deleteConversation = async (req, res) => {
     }
 
     await messageModel.deleteMany({ conversationId });
-
     await conversationModel.findByIdAndDelete(conversationId);
 
     res.json({ success: true, message: "Conversation deleted" });

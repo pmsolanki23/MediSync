@@ -64,7 +64,7 @@ const Messages = () => {
         `${backendUrl}/api/user/send-message`,
         {
           conversationId: selectedConversation._id,
-          message: newMessage
+          content: newMessage
         },
         { headers: { token } }
       )
@@ -137,7 +137,10 @@ const Messages = () => {
                     }`}
                   >
                     <h3 className='font-semibold text-slate-900 text-sm sm:text-base truncate'>
-                      {conv.participantName}
+                      {(() => {
+                        const otherParticipantId = conv.participants.find(id => id !== userData._id)
+                        return conv.participantNames?.[otherParticipantId] || 'User'
+                      })()}
                     </h3>
                     <p className='mt-1 truncate text-xs sm:text-sm text-slate-500'>
                       {conv.lastMessage}
@@ -159,7 +162,10 @@ const Messages = () => {
                 <div className='border-b border-slate-200 p-3 sm:p-4 lg:p-6 flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent'>
                   <div className='min-w-0 flex-1'>
                     <h2 className='font-bold text-slate-900 text-sm sm:text-base truncate'>
-                      {selectedConversation.participantName}
+                      {(() => {
+                        const otherParticipantId = selectedConversation.participants.find(id => id !== userData._id)
+                        return selectedConversation.participantNames?.[otherParticipantId] || 'User'
+                      })()}
                     </h2>
                     <p className='text-xs sm:text-sm text-slate-500'>Active now</p>
                   </div>
@@ -183,18 +189,18 @@ const Messages = () => {
                     messages.map((msg, index) => (
                       <div
                         key={index}
-                        className={`flex ${msg.sender === userData._id ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${msg.senderId === userData._id ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
                           className={`rounded-2xl px-3 sm:px-4 py-2 sm:py-3 max-w-xs text-xs sm:text-sm break-words ${
-                            msg.sender === userData._id
+                            msg.senderId === userData._id
                               ? 'bg-primary text-white'
                               : 'bg-slate-100 text-slate-900'
                           }`}
                         >
-                          <p>{msg.text}</p>
+                          <p>{msg.content}</p>
                           <p className='mt-1 text-xs opacity-70'>
-                            {new Date(msg.timestamp).toLocaleTimeString()}
+                            {new Date(msg.createdAt).toLocaleTimeString()}
                           </p>
                         </div>
                       </div>

@@ -2,7 +2,11 @@ import notificationModel from "../models/notificationModel.js";
 
 const getNotifications = async (req, res) => {
   try {
-    const { userId } = req.headers;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.json({ success: false, message: "User ID required" });
+    }
 
     const notifications = await notificationModel
       .find({ userId })
@@ -19,6 +23,10 @@ const markAsRead = async (req, res) => {
   try {
     const { notificationId } = req.body;
 
+    if (!notificationId) {
+      return res.json({ success: false, message: "Notification ID required" });
+    }
+
     await notificationModel.findByIdAndUpdate(notificationId, { isRead: true });
 
     res.json({ success: true, message: "Notification marked as read" });
@@ -29,7 +37,11 @@ const markAsRead = async (req, res) => {
 
 const markAllAsRead = async (req, res) => {
   try {
-    const { userId } = req.headers;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.json({ success: false, message: "User ID required" });
+    }
 
     await notificationModel.updateMany({ userId }, { isRead: true });
 
@@ -53,7 +65,11 @@ const deleteNotification = async (req, res) => {
 
 const getUnreadCount = async (req, res) => {
   try {
-    const { userId } = req.headers;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.json({ success: false, message: "User ID required" });
+    }
 
     const count = await notificationModel.countDocuments({ userId, isRead: false });
 

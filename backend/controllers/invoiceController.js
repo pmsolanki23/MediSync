@@ -1,5 +1,6 @@
 import invoiceModel from "../models/invoiceModel.js";
 import appointmentModel from "../models/appointmentModel.js";
+import doctorModel from "../models/doctorModel.js";
 
 const generateInvoiceNumber = () => {
     const date = new Date();
@@ -31,8 +32,8 @@ const createInvoice = async (req, res) => {
             invoiceNumber,
             amount,
             paymentMethod,
+            issueDate: Date.now(),
             dueDate,
-            createdAt: Date.now()
         };
 
         const invoice = await invoiceModel.create(invoiceData);
@@ -61,15 +62,27 @@ const getUserInvoices = async (req, res) => {
 
         const invoices = await invoiceModel
             .find(query)
-            .sort({ createdAt: -1 })
+            .sort({ issueDate: -1 })
             .skip(skip)
             .limit(limit);
+
+        // Enrich with appointment and doctor details
+        const enrichedInvoices = await Promise.all(invoices.map(async (inv) => {
+            const appointment = await appointmentModel.findById(inv.appointmentId);
+            const doctor = await doctorModel.findById(inv.docId);
+            return {
+                ...inv.toObject(),
+                appointmentDetails: appointment,
+                doctorName: doctor?.name || 'N/A',
+                doctorSpeciality: doctor?.speciality || 'N/A'
+            };
+        }));
 
         const total = await invoiceModel.countDocuments(query);
 
         res.json({ 
             success: true, 
-            invoices,
+            invoices: enrichedInvoices,
             pagination: {
                 page,
                 limit,
@@ -98,8 +111,17 @@ const getInvoice = async (req, res) => {
         }
 
         const appointment = await appointmentModel.findById(invoice.appointmentId);
+        const doctor = await doctorModel.findById(invoice.docId);
 
-        res.json({ success: true, invoice, appointment });
+        res.json({ 
+            success: true, 
+            invoice: {
+                ...invoice.toObject(),
+                doctorName: doctor?.name || 'N/A',
+                doctorSpeciality: doctor?.speciality || 'N/A'
+            },
+            appointment 
+        });
 
     } catch (error) {
         res.json({ success: false, message: error.message });
@@ -122,10 +144,7 @@ const markInvoiceAsPaid = async (req, res) => {
 
         await invoiceModel.findByIdAndUpdate(invoiceId, {
             status: 'paid',
-            paymentDate: Date.now()
         });
-
-        await appointmentModel.findByIdAndUpdate(invoice.appointmentId, { payment: true });
 
         res.json({ success: true, message: "Invoice marked as paid" });
 
@@ -148,9 +167,10 @@ const getInvoiceStats = async (req, res) => {
             total: invoices.length,
             paid: invoices.filter(i => i.status === 'paid').length,
             pending: invoices.filter(i => i.status === 'pending').length,
-            failed: invoices.filter(i => i.status === 'failed').length,
+            refunded: invoices.filter(i => i.status === 'refunded').length,
             totalAmount: invoices.reduce((sum, i) => sum + i.amount, 0),
-            paidAmount: invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0)
+            paidAmount: invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0),
+            pendingAmount: invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + i.amount, 0)
         };
 
         res.json({ success: true, stats });
@@ -175,8 +195,18 @@ const downloadInvoice = async (req, res) => {
         }
 
         const appointment = await appointmentModel.findById(invoice.appointmentId);
+        const doctor = await doctorModel.findById(invoice.docId);
 
-        res.json({ success: true, message: "Invoice ready for download", invoice, appointment });
+        res.json({ 
+            success: true, 
+            message: "Invoice ready for download", 
+            invoice: {
+                ...invoice.toObject(),
+                doctorName: doctor?.name || 'N/A',
+                doctorSpeciality: doctor?.speciality || 'N/A'
+            },
+            appointment 
+        });
 
     } catch (error) {
         res.json({ success: false, message: error.message });
