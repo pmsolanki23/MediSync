@@ -5,13 +5,14 @@ import { doctors as seededDoctors } from '../assets/assets'
 import { AppContext } from './AppContextObject'
 
 const AppContextProvider = (props) => {
-    const currencySymbol = 'Rs.'
+    const currencySymbol = '₹'
     const backendUrl = import.meta.env.VITE_BACKEND_URL
 
     const [doctors, setDoctors] = useState(seededDoctors)
     const [loadingDoctors, setLoadingDoctors] = useState(false)
     const [token, setToken] = useState(localStorage.getItem('token') || '')
-    const [userData, setUserData] = useState(false)
+    const [userData, setUserData] = useState(null)
+    const [userId, setUserId] = useState(localStorage.getItem('userId') || '')
 
     const getDoctorsData = useCallback(async () => {
         if (!backendUrl) {
@@ -52,6 +53,11 @@ const AppContextProvider = (props) => {
                     dob: data.userData.dob || ''
                 }
                 setUserData(safeUserData)
+                // Store userId in localStorage and context
+                if (data.userData._id) {
+                    localStorage.setItem('userId', data.userData._id)
+                    setUserId(data.userData._id)
+                }
             } else {
                 toast.error(data.message)
             }
@@ -75,7 +81,8 @@ const AppContextProvider = (props) => {
         currencySymbol,
         backendUrl,
         token, setToken,
-        userData, setUserData, loadUserProfileData
+        userData, setUserData, loadUserProfileData,
+        userId, setUserId
     }
 
     return (

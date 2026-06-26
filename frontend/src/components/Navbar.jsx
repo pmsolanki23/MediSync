@@ -200,6 +200,14 @@ const Navbar = () => {
                       📄 Invoices
                     </button>
 
+                    {/* PRESCRIPTIONS */}
+                    <button
+                      onClick={() => navigate('/prescriptions')}
+                      className='w-full rounded-2xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-teal-50'
+                    >
+                      💊 Prescriptions
+                    </button>
+
                     {/* LOGOUT */}
                     <button
                       onClick={() => setShowLogoutPopup(true)}

@@ -11,6 +11,7 @@ import Appointment from './Appointment'
 import Messages from './pages/Messages'
 import Notifications from './pages/Notifications'
 import Invoices from './pages/Invoices'
+import PrescriptionViewer from './components/PrescriptionViewer'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import { ToastContainer } from 'react-toastify'
@@ -35,6 +36,7 @@ const App = () => {
           <Route path='/messages' element={<Messages />} />
           <Route path='/notifications' element={<Notifications />} />
           <Route path='/invoices' element={<Invoices />} />
+          <Route path='/prescriptions' element={<PrescriptionViewer />} />
         </Routes>
         <Footer />
       </div>

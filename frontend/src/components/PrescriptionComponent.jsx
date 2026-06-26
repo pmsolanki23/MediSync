@@ -11,10 +11,10 @@ const PrescriptionComponent = ({ isDarkMode }) => {
   const [selectedPrescription, setSelectedPrescription] = useState(null)
 
   useEffect(() => {
-    if (userData?._id) {
+    if (userData?._id && token) {
       fetchPrescriptions()
     }
-  }, [userData])
+  }, [userData?._id, token])
 
   const fetchPrescriptions = async () => {
     setLoading(true)

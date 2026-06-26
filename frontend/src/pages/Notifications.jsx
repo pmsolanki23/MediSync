@@ -16,17 +16,26 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     setLoading(true)
     try {
-      const userId = localStorage.getItem('userId')
+      const userId = userData?._id || localStorage.getItem('userId')
+      if (!userId) {
+        console.warn('No user ID found')
+        setLoading(false)
+        return
+      }
+
       const { data } = await axios.post(
         `${backendUrl}/api/user/get-notifications`,
         { userId },
         { headers: { token } }
       )
       if (data.success) {
-        setNotifications(data.notifications)
+        setNotifications(data.notifications || [])
+      } else {
+        setNotifications([])
       }
     } catch (error) {
-      toast.error('Failed to load notifications')
+      console.error('Notification fetch error:', error)
+      setNotifications([])
     } finally {
       setLoading(false)
     }

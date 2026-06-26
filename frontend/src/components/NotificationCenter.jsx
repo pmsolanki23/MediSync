@@ -144,7 +144,7 @@ const NotificationCenter = ({ userId, isDarkMode }) => {
                 <div
                   key={notification._id}
                   className={`p-3 sm:p-4 hover:bg-opacity-50 transition text-xs sm:text-sm ${
-                    !notification.read
+                    !notification.isRead
                       ? isDarkMode
                         ? 'bg-gray-700'
                         : 'bg-blue-50'
@@ -163,7 +163,7 @@ const NotificationCenter = ({ userId, isDarkMode }) => {
                       </p>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
-                      {!notification.read && (
+                      {!notification.isRead && (
                         <button
                           onClick={() => handleMarkAsRead(notification._id)}
                           className="text-blue-500 hover:text-blue-700 touch-manipulation p-1"

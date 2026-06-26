@@ -31,6 +31,7 @@ app.use('/api/prescription', prescriptionRouter)
 app.use('/api/wallet', walletRouter)
 app.use('/api/review', reviewRouter)
 
+// Health check endpoint
 app.get("/", (req, res) => {
   res.send("MediSync API Working")
 })

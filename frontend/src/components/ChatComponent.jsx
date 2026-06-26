@@ -53,10 +53,9 @@ const ChatComponent = ({ userId, conversationId, isDarkMode, doctorName, doctorI
       const { data } = await axios.post(
         `${backendURL}/api/user/send-message`,
         {
-          senderId: userId,
-          senderType: 'user',
-          receiverId: conversationId.split('-')[1],
-          message: newMessage
+          recipientId: conversationId,
+          content: newMessage,
+          conversationId: null
         },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       )
@@ -109,9 +108,9 @@ const ChatComponent = ({ userId, conversationId, isDarkMode, doctorName, doctorI
                     : 'bg-gray-100 rounded-bl-none'
                 }`}
               >
-                <p className='break-words'>{msg.message}</p>
+                <p className='break-words'>{msg.content}</p>
                 <p className={`text-xs mt-1 opacity-70 whitespace-nowrap`}>
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>

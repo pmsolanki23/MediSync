@@ -18,7 +18,13 @@ const Invoices = () => {
   const fetchInvoices = async () => {
     setLoading(true)
     try {
-      const userId = localStorage.getItem('userId')
+      const userId = userData?._id || localStorage.getItem('userId')
+      if (!userId) {
+        toast.error('User ID not found')
+        setLoading(false)
+        return
+      }
+
       const { data } = await axios.post(
         `${backendUrl}/api/user/get-invoices`,
         { userId },
@@ -26,8 +32,11 @@ const Invoices = () => {
       )
       if (data.success) {
         setInvoices(data.invoices)
+      } else {
+        toast.error(data.message || 'Failed to load invoices')
       }
     } catch (error) {
+      console.error('Invoice fetch error:', error)
       toast.error('Failed to load invoices')
     } finally {
       setLoading(false)

@@ -81,6 +81,21 @@ const appointmentComplete = async (req, res) => {
     }
 
     await appointmentModel.findByIdAndUpdate(appointmentId, { isCompleted: true });
+    
+    // Create notification for patient
+    const notificationModel = (await import("../models/notificationModel.js")).default;
+    const doctor = await doctorModel.findById(docId);
+    
+    await notificationModel.create({
+      userId: appointment.userId,
+      title: "Appointment Completed",
+      message: `Your appointment with Dr. ${doctor?.name} has been completed. You can now view your prescription if available.`,
+      type: "appointment",
+      relatedId: appointmentId,
+      isRead: false,
+      createdAt: Date.now()
+    });
+    
     res.json({ success: true, message: "Appointment Completed" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

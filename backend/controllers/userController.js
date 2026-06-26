@@ -147,6 +147,19 @@ const bookAppointment = async (req, res) => {
 
         await doctorModel.findByIdAndUpdate(docId, { slots_booked })
 
+        // Create notification for user
+        const notificationModel = (await import("../models/notificationModel.js")).default;
+        
+        await notificationModel.create({
+            userId,
+            title: "Appointment Booked Successfully",
+            message: `Your appointment with Dr. ${docData.name} is scheduled for ${slotDate} at ${slotTime}. Please complete the payment to confirm.`,
+            type: "appointment",
+            relatedId: newAppointment._id,
+            isRead: false,
+            createdAt: Date.now()
+        });
+
         res.json({ success: true, message: 'Appointment Booked' })
 
     } catch (error) {
@@ -174,6 +187,19 @@ const cancelAppointment = async (req, res) => {
         slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
 
         await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+
+        // Create notification for user
+        const notificationModel = (await import("../models/notificationModel.js")).default;
+        
+        await notificationModel.create({
+            userId,
+            title: "Appointment Cancelled",
+            message: `Your appointment with Dr. ${doctorData.name} scheduled for ${slotDate} has been cancelled.`,
+            type: "appointment",
+            relatedId: appointmentId,
+            isRead: false,
+            createdAt: Date.now()
+        });
 
         res.json({ success: true, message: 'Appointment Cancelled' })
 
@@ -263,6 +289,28 @@ const verifyRazorpay = async (req, res) => {
             }
 
             await appointmentModel.findByIdAndUpdate(appointmentId, { payment: true })
+            
+            // Create invoice for demo payment
+            const invoiceModel = await import("../models/invoiceModel.js").then(m => m.default);
+            const generateInvoiceNumber = () => {
+                const date = new Date();
+                const timestamp = date.getTime().toString().slice(-6);
+                const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                return `INV-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${timestamp}-${random}`;
+            };
+            
+            await invoiceModel.create({
+                appointmentId,
+                userId,
+                docId: appointmentData.docId,
+                invoiceNumber: generateInvoiceNumber(),
+                amount: appointmentData.amount,
+                paymentMethod: 'razorpay',
+                status: 'paid',
+                issueDate: Date.now(),
+                dueDate: Date.now() + 30 * 24 * 60 * 60 * 1000
+            });
+            
             return res.json({ success: true, message: "Demo Payment Successful" })
         }
 
@@ -279,6 +327,11 @@ const verifyRazorpay = async (req, res) => {
             return res.json({ success: false, message: 'Payment verification failed' })
         }
 
+        const razorpayInstance = new razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET
+        })
+
         const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
         const appointmentData = await appointmentModel.findById(orderInfo.receipt)
 
@@ -287,6 +340,28 @@ const verifyRazorpay = async (req, res) => {
         }
 
         await appointmentModel.findByIdAndUpdate(orderInfo.receipt, { payment: true })
+        
+        // Create invoice after successful payment
+        const invoiceModel = await import("../models/invoiceModel.js").then(m => m.default);
+        const generateInvoiceNumber = () => {
+            const date = new Date();
+            const timestamp = date.getTime().toString().slice(-6);
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `INV-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${timestamp}-${random}`;
+        };
+        
+        await invoiceModel.create({
+            appointmentId: orderInfo.receipt,
+            userId,
+            docId: appointmentData.docId,
+            invoiceNumber: generateInvoiceNumber(),
+            amount: appointmentData.amount,
+            paymentMethod: 'razorpay',
+            status: 'paid',
+            issueDate: Date.now(),
+            dueDate: Date.now() + 30 * 24 * 60 * 60 * 1000
+        });
+        
         res.json({ success: true, message: "Payment Successful" })
     } catch (error) {
         res.json({ success: false, message: error.message })
